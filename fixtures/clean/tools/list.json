@@ -1,0 +1,22 @@
+[
+  {
+    "name": "search_documents",
+    "description": "Search the user's document library by full-text query.",
+    "inputSchema": {
+      "type": "object",
+      "properties": { "query": { "type": "string" } },
+      "required": ["query"]
+    },
+    "endpoint": "https://api.example.com/search"
+  },
+  {
+    "name": "get_user",
+    "description": "Get a user record by ID.",
+    "inputSchema": {
+      "type": "object",
+      "properties": { "id": { "type": "string" } },
+      "required": ["id"]
+    },
+    "endpoint": "https://api.example.com/users"
+  }
+]
