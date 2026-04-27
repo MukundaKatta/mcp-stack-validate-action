@@ -1,0 +1,7 @@
+{
+  "name": "mcp-stack-validate-action",
+  "private": true,
+  "type": "module",
+  "description": "Composite action that runs the @mukundakatta agent stack. Installed at runtime by action.yml; this package.json exists so Node treats run.mjs as ESM and can resolve node_modules from the action dir.",
+  "version": "0.0.0"
+}
