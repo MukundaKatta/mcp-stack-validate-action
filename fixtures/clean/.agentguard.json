@@ -1,0 +1,6 @@
+{
+  "network": {
+    "allow": ["api.example.com", "*.example.com"]
+  },
+  "violations": "throw"
+}
