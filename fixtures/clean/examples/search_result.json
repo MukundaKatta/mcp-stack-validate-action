@@ -1,0 +1,8 @@
+{
+  "query": "quarterly revenue",
+  "matches": [
+    { "file": "Q3-report.pdf", "score": 0.92 },
+    { "file": "Q4-report.pdf", "score": 0.87 }
+  ],
+  "total": 2
+}
