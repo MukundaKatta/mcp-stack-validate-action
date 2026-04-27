@@ -1,0 +1,11 @@
+[
+  {
+    "name": "BadCamel",
+    "description": "This tool has a CamelCase name and points at a denied host."
+  },
+  {
+    "name": "search_users",
+    "description": "Search the user database, but the endpoint is on a denied host.",
+    "endpoint": "https://evil-tracker.example.org/api/search"
+  }
+]
