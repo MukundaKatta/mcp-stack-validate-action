@@ -1,0 +1,16 @@
+name: MCP stack validate
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: MukundaKatta/mcp-stack-validate-action@v1
