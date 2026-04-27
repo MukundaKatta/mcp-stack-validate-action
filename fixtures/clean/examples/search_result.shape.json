@@ -1,0 +1,5 @@
+{
+  "query": "string",
+  "matches": "array",
+  "total": "number"
+}
