@@ -1,5 +1,5 @@
 name: "mcp-stack-validate-action"
-description: "One-stop CI gate for MCP / LLM-tool projects. Runs the @mukundakatta agent stack: agentfit, agentguard, agentsnap, agentvet, agentcast."
+description: "One CI gate for MCP / LLM-tool projects. Runs agentfit, agentguard, agentsnap, agentvet, agentcast in sequence."
 author: "MukundaKatta"
 
 branding:
