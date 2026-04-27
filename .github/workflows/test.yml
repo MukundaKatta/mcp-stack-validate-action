@@ -1,0 +1,103 @@
+name: Test action
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  clean-fixtures:
+    runs-on: ubuntu-latest
+    name: Clean fixture passes the full stack
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run mcp-stack-validate
+        id: stack
+        uses: ./
+        with:
+          tools-glob: "fixtures/clean/tools/*.json"
+          prompts-glob: "fixtures/clean/prompts/*.md"
+          agentguard-policy-path: "fixtures/clean/.agentguard.json"
+          agentguard-urls-glob: "fixtures/clean/tools/*.json"
+          snapshots-dir: "fixtures/clean/tests/__agentsnap__"
+          shapes-glob: "fixtures/clean/examples/*.json"
+          comment-on-pr: false
+      - name: Verify all steps passed
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ steps.stack.outputs.agentvet-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentguard-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentsnap-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentcast-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentfit-passed }}" = "true"
+          echo "all 5 steps passed against clean fixture"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clean-report
+          path: mcp-stack-report.json
+
+  dirty-fixtures:
+    runs-on: ubuntu-latest
+    name: Dirty fixture fails on agentvet + agentguard
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run mcp-stack-validate
+        id: stack
+        uses: ./
+        continue-on-error: true
+        with:
+          tools-glob: "fixtures/dirty/tools/*.json"
+          prompts-glob: ""
+          agentguard-policy-path: "fixtures/dirty/.agentguard.json"
+          agentguard-urls-glob: "fixtures/dirty/tools/*.json"
+          snapshots-dir: "fixtures/dirty/tests/__agentsnap__"
+          shapes-glob: ""
+          comment-on-pr: false
+      - name: Verify failures landed on the right steps
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.stack.outcome }}" != "failure" ]; then
+            echo "expected stack to fail on dirty fixture"
+            exit 1
+          fi
+          test "${{ steps.stack.outputs.agentvet-passed }}" = "false"
+          test "${{ steps.stack.outputs.agentguard-passed }}" = "false"
+          # snap + cast + fit should be skipped (no inputs) → passed=true
+          test "${{ steps.stack.outputs.agentsnap-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentcast-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentfit-passed }}" = "true"
+          echo "dirty fixture correctly failed on agentvet + agentguard"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dirty-report
+          path: mcp-stack-report.json
+
+  skip-input:
+    runs-on: ubuntu-latest
+    name: skip input bypasses requested steps
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run mcp-stack-validate with agentvet skipped
+        id: stack
+        uses: ./
+        with:
+          tools-glob: "fixtures/dirty/tools/*.json"
+          prompts-glob: ""
+          agentguard-policy-path: "fixtures/clean/.agentguard.json"
+          agentguard-urls-glob: "fixtures/clean/tools/*.json"
+          snapshots-dir: "fixtures/clean/tests/__agentsnap__"
+          shapes-glob: ""
+          skip: "agentvet,agentcast,agentfit"
+          comment-on-pr: false
+      - name: Verify skipped steps reported as passed
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ steps.stack.outputs.agentvet-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentcast-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentfit-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentguard-passed }}" = "true"
+          test "${{ steps.stack.outputs.agentsnap-passed }}" = "true"
+          echo "skip input honored; build green"
