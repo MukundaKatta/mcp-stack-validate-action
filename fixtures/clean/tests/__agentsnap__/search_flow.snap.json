@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "model": "claude-sonnet-4-6",
+  "input": "find me coffee shops",
+  "output": "Found 3 coffee shops near you.",
+  "tools": [
+    {
+      "name": "search",
+      "args": { "query": "coffee shops", "limit": 10 },
+      "result_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "error": null,
+  "fingerprint": { "node": "v20.0.0", "agentsnap": "0.1.0" }
+}
