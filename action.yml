@@ -1,0 +1,136 @@
+name: "mcp-stack-validate-action"
+description: "One-stop CI gate for MCP / LLM-tool projects. Runs the @mukundakatta agent stack: agentfit, agentguard, agentsnap, agentvet, agentcast."
+author: "MukundaKatta"
+
+branding:
+  icon: "layers"
+  color: "green"
+
+inputs:
+  mcp-config-path:
+    description: "Path to MCP config (mcp.json / .mcp.json) for tool discovery."
+    required: false
+    default: "mcp.json"
+  tools-glob:
+    description: "Comma- or newline-separated globs of JSON files containing tool definitions (used by agentvet)."
+    required: false
+    default: "**/tools/*.json,**/mcp.json,**/.mcp.json"
+  prompts-glob:
+    description: "Globs of prompt files to count tokens for (used by agentfit)."
+    required: false
+    default: "**/prompts/*.md,**/prompts/*.txt"
+  prompts-token-budget:
+    description: "Fail when any single prompt exceeds this estimated token budget. Empty = report only."
+    required: false
+    default: ""
+  prompts-model:
+    description: "Model family for token estimation (claude / gpt / gemini / llama)."
+    required: false
+    default: "claude"
+  agentguard-policy-path:
+    description: "Path to agentguard policy JSON. If absent, the agentguard step is skipped silently."
+    required: false
+    default: ".agentguard.json"
+  agentguard-urls-glob:
+    description: "Globs of JSON files to scan for URL fields against the policy."
+    required: false
+    default: "**/tools/*.json,**/mcp.json,**/.mcp.json"
+  snapshots-dir:
+    description: "Directory of agentsnap *.snap.json baselines + *.current.json runs. If empty or no files, the snap step is skipped."
+    required: false
+    default: "tests/__agentsnap__"
+  shapes-glob:
+    description: "Globs of JSON example payloads to validate via agentcast.adapters.shape() — paired with a sibling .shape.json describing expected fields."
+    required: false
+    default: "**/examples/*.json"
+  skip:
+    description: "Comma-separated tool names to skip: agentfit, agentguard, agentsnap, agentvet, agentcast."
+    required: false
+    default: ""
+  fail-on:
+    description: "Composite fail mode: any (any tool failing fails the run) | none (always succeed; report only)."
+    required: false
+    default: "any"
+  comment-on-pr:
+    description: "Post a unified summary as a PR comment when running on a PR."
+    required: false
+    default: "true"
+  report-path:
+    description: "Where to write the unified JSON report."
+    required: false
+    default: "mcp-stack-report.json"
+  node-version:
+    description: "Node version to set up."
+    required: false
+    default: "20"
+
+outputs:
+  agentfit-passed:
+    description: "true if the agentfit step passed (or was skipped)."
+    value: ${{ steps.run.outputs.agentfit-passed }}
+  agentguard-passed:
+    description: "true if the agentguard step passed (or was skipped)."
+    value: ${{ steps.run.outputs.agentguard-passed }}
+  agentsnap-passed:
+    description: "true if the agentsnap step passed (or was skipped)."
+    value: ${{ steps.run.outputs.agentsnap-passed }}
+  agentvet-passed:
+    description: "true if the agentvet step passed (or was skipped)."
+    value: ${{ steps.run.outputs.agentvet-passed }}
+  agentcast-passed:
+    description: "true if the agentcast step passed (or was skipped)."
+    value: ${{ steps.run.outputs.agentcast-passed }}
+  report-path:
+    description: "Path to the unified JSON report."
+    value: ${{ steps.run.outputs.report-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install agent stack
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        # Install into the action dir so the runner can `import` each lib via
+        # normal Node resolution.
+        if [ ! -f package.json ]; then
+          echo '{"private":true,"type":"module"}' > package.json
+        fi
+        npm install --no-fund --no-audit --silent \
+          @mukundakatta/agentfit@latest \
+          @mukundakatta/agentguard@latest \
+          @mukundakatta/agentsnap@latest \
+          @mukundakatta/agentvet@latest \
+          @mukundakatta/agentcast@latest
+
+    - name: Run mcp stack validation
+      id: run
+      shell: bash
+      env:
+        MCP_CONFIG_PATH: ${{ inputs.mcp-config-path }}
+        MCP_TOOLS_GLOB: ${{ inputs.tools-glob }}
+        MCP_PROMPTS_GLOB: ${{ inputs.prompts-glob }}
+        MCP_PROMPTS_BUDGET: ${{ inputs.prompts-token-budget }}
+        MCP_PROMPTS_MODEL: ${{ inputs.prompts-model }}
+        MCP_AGENTGUARD_POLICY: ${{ inputs.agentguard-policy-path }}
+        MCP_AGENTGUARD_URLS_GLOB: ${{ inputs.agentguard-urls-glob }}
+        MCP_SNAPSHOTS_DIR: ${{ inputs.snapshots-dir }}
+        MCP_SHAPES_GLOB: ${{ inputs.shapes-glob }}
+        MCP_SKIP: ${{ inputs.skip }}
+        MCP_FAIL_ON: ${{ inputs.fail-on }}
+        MCP_REPORT_PATH: ${{ inputs.report-path }}
+      run: node "$GITHUB_ACTION_PATH/run.mjs"
+
+    - name: Comment unified summary on PR
+      if: ${{ inputs.comment-on-pr == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPORT_PATH: ${{ steps.run.outputs.report-path }}
+      run: node "$GITHUB_ACTION_PATH/comment.mjs"
