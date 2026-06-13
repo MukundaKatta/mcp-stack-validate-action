@@ -32,7 +32,7 @@ jobs:
           test "${{ steps.stack.outputs.agentcast-passed }}" = "true"
           test "${{ steps.stack.outputs.agentfit-passed }}" = "true"
           echo "all 5 steps passed against clean fixture"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: clean-report
           path: mcp-stack-report.json
@@ -69,7 +69,7 @@ jobs:
           test "${{ steps.stack.outputs.agentcast-passed }}" = "true"
           test "${{ steps.stack.outputs.agentfit-passed }}" = "true"
           echo "dirty fixture correctly failed on agentvet + agentguard"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dirty-report
           path: mcp-stack-report.json
