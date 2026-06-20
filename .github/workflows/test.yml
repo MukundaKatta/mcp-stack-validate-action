@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Clean fixture passes the full stack
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run mcp-stack-validate
         id: stack
         uses: ./
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Dirty fixture fails on agentvet + agentguard
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run mcp-stack-validate
         id: stack
         uses: ./
@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     name: skip input bypasses requested steps
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run mcp-stack-validate with agentvet skipped
         id: stack
         uses: ./
